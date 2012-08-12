@@ -22,10 +22,15 @@ class Enviro : public Iop
 
 public:
 	Enviro(Node*);
+
 	void _validate(bool);
 	void _request(int, int, int, int, ChannelMask, int);
 	void engine(int y, int x, int r, ChannelMask, Row &);
+
+	int minimum_inputs() const;
+	const char* input_label(int n, char *buf) const;
 	virtual void knobs(Knob_Callback);
+
 	const char* Class() const { return CLASS; }
 	const char* node_help() const { return HELP; }
 	static const Description d;
@@ -40,6 +45,22 @@ Enviro::Enviro(Node* node) : Iop(node)
 	Normals[0] = Normals[1] = Normals[2] = Chan_Black;
 	Position[0] = Position[1] = Position[2] = Chan_Black;
 	Output[0] = Output[1] = Output[2] = Chan_Black;
+}
+
+int Enviro::minimum_inputs() const
+{
+	return 2;
+}
+
+const char* Enviro::input_label(int n, char *buf) const
+{
+	switch (n)
+	{
+	case 0: return "Input";
+	case 1: return "Environment";
+	case 2: return "Camera";
+	}
+	return buf;
 }
 
 void Enviro::knobs(Knob_Callback f)
@@ -83,6 +104,29 @@ void Enviro::engine(int y, int x, int r, ChannelMask channels, Row& out)
 	//TODO: Calculate coordinate in Environment. Get the color at the coordinate.
 	//TODO: Write resulting color into the layer set in &output
 
+	ChannelSet input;
+	input = ChannelSet(Normals,3) + ChannelSet(Position, 3);
+	//input += Position;
+
+
+    // define an input row as it's faster then per pixel access
+    Row in(x, y);
+    in.get(input0(), y, x, r, input);
+
+    float* TOr = out.writable(Output[0]);
+    float* TOg = out.writable(Output[1]);
+    float* TOb = out.writable(Output[2]);
+
+    for (int X = x; X < r; ++X) {
+		double nX = in[Normals[0]][X];
+		double nY = in[Normals[1]][X];
+		double nZ = in[Normals[2]][X];
+
+        *TOr++ = nX*0.5f;
+        *TOg++ = nY*0.5f;
+        *TOb++ = nZ*0.5f;                                                
+        
+	}
 }
 
 static Iop* Enviro_c(Node* node) { return new Enviro(node); }
