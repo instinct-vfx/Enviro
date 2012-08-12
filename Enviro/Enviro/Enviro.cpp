@@ -105,11 +105,10 @@ void Enviro::engine(int y, int x, int r, ChannelMask channels, Row& out)
 	//TODO: Write resulting color into the layer set in &output
 
 	ChannelSet input;
-	input = ChannelSet(Normals,3) + ChannelSet(Position, 3);
-	//input += Position;
+	input = channels + ChannelSet(Normals,3) + ChannelSet(Position, 3);
 
 
-    // define an input row as it's faster then per pixel access
+    //Define an input row as it's faster then per pixel access
     Row in(x, y);
     in.get(input0(), y, x, r, input);
 
